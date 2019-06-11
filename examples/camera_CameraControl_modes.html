@@ -1,0 +1,180 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="utf-8"/>
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>Minimal BIM Viewer for glTF Models</title>
+    <link href="css/styles.css" type="text/css" rel="stylesheet"/>
+
+    <style>
+        #myCanvas {
+            background: #ffffff;
+        }
+
+        #myNavCubeCanvas {
+            position: absolute;
+            width: 250px;
+            height: 250px;
+            bottom: 50px;
+            right: 10px;
+            z-index: 200000;
+        }
+    </style>
+
+    <script src="libs/dat.gui.min.js"></script>
+</head>
+<body>
+
+<canvas id="myCanvas"></canvas>
+
+<canvas id="myNavCubeCanvas"></canvas>
+
+<!--<div id="info">-->
+    <!--<h1>Loading a BIM Model from the File System</h1>-->
+    <!--<ul>-->
+        <!--<li>-->
+            <!--<a target="_other"-->
+               <!--href="./../docs/class/src/plugins/GLTFLoaderPlugin/GLTFLoaderPlugin.js~GLTFLoaderPlugin.html">GLTFLoaderPlugin</a>-->
+            <!-- - Loads model and IFC data from file system-->
+        <!--</li>-->
+        <!--<li>-->
+            <!--<a target="_other"-->
+               <!--href="http://openifcmodel.cs.auckland.ac.nz/Model/Details/274">Model source</a>-->
+        <!--</li>-->
+        <!--<li>-->
+            <!--<a target="_other" href="https://github.com/xeokit/xeokit-sdk/wiki/Viewing-BIM-Models-Offline">User Guide</a>-->
+        <!--</li>-->
+    <!--</ul>-->
+<!--</div>-->
+
+<div id="dat-gui-container">
+</div>
+
+</body>
+
+<script type="module">
+
+    //------------------------------------------------------------------------------------------------------------------
+    // Import the modules we need for this example
+    //------------------------------------------------------------------------------------------------------------------
+
+    import {Viewer} from "../src/viewer/Viewer.js";
+    import {GLTFLoaderPlugin} from "../src/plugins/GLTFLoaderPlugin/GLTFLoaderPlugin.js";
+    import {NavCubePlugin} from "../src/plugins/NavCubePlugin/NavCubePlugin.js";
+
+    //------------------------------------------------------------------------------------------------------------------
+    // Create a Viewer, arrange the camera, tweak xraying and highlight materials
+    //------------------------------------------------------------------------------------------------------------------
+
+    const viewer = new Viewer({
+        canvasId: "myCanvas",
+        transparent: true
+    });
+
+    viewer.camera.eye = [-3.933, 2.855, 27.018];
+    viewer.camera.look = [4.400, 3.724, 8.899];
+    viewer.camera.up = [-0.018, 0.999, 0.039];
+
+    viewer.cameraFlight.fitFOV = 15;
+
+    viewer.scene.xrayMaterial.fillAlpha = 0.1;
+    viewer.scene.xrayMaterial.fillColor = [0, 0, 0];
+    viewer.scene.xrayMaterial.edgeAlpha = 0.4;
+    viewer.scene.xrayMaterial.edgeColor = [0, 0, 0];
+
+    viewer.scene.highlightMaterial.fillAlpha = 0.3;
+    viewer.scene.highlightMaterial.edgeColor = [1, 1, 0];
+
+    //------------------------------------------------------------------------------------------------------------------
+    // Create a NavCube gizmo
+    //------------------------------------------------------------------------------------------------------------------
+
+    new NavCubePlugin(viewer, {
+        canvasId: "myNavCubeCanvas",
+        visible: true,
+        size: 250,
+        alignment: "bottomRight",
+        bottomMargin: 100,
+        rightMargin: 10
+    });
+
+    //------------------------------------------------------------------------------------------------------------------
+    // Load model and metadata
+    //------------------------------------------------------------------------------------------------------------------
+
+    const gltfLoader = new GLTFLoaderPlugin(viewer);
+
+    const model = gltfLoader.load({
+        id: "myModel",
+        src: "./models/gltf/duplex/scene.gltf",
+        metaModelSrc: "./metaModels/duplex/metaModel.json", // Creates a MetaObject instances in scene.metaScene.metaObjects
+        edges: true
+    });
+
+    model.on("loaded", function () {
+        model.on("loaded", () => {
+            viewer.cameraFlight.flyTo(model);
+        });
+    });
+
+
+    const cameraControl = viewer.cameraControl;
+    const camera = viewer.camera;
+
+    var Menu = function () {
+
+        this["active"] = cameraControl.active;
+        this["firstPerson"] = cameraControl.firstPerson;
+        this["pivoting"] = cameraControl.pivoting;
+        this["panToPointer"] = cameraControl.panToPointer;
+        this["panToPivot"] = cameraControl.panToPivot;
+        this["doublePickFlyTo"] = cameraControl.doublePickFlyTo;
+        this["inertia"] = cameraControl.inertia;
+        this["gimbalLock"] = camera.gimbalLock;
+        this["projection"] = camera.projection;
+
+        var self = this;
+
+        var update = function () {
+
+            cameraControl.active = self["active"];
+            cameraControl.firstPerson = self["firstPerson"];
+            cameraControl.pivoting = self["pivoting"];
+            cameraControl.panToPointer = self["panToPointer"];
+            cameraControl.panToPivot = self["panToPivot"];
+            cameraControl.doublePickFlyTo = self["doublePickFlyTo"];
+            cameraControl.inertia = self["inertia"];
+
+            camera.gimbalLock = self["gimbalLock"];
+            camera.projection = self["projection"];
+
+            requestAnimationFrame(update);
+        };
+
+        update();
+    };
+
+    var gui = new dat.GUI({autoPlace: false, top: 0, width: 400});
+
+    document.getElementById('dat-gui-container').appendChild(gui.domElement);
+
+    var menu = new Menu();
+
+    var cameraControlFolder = gui.addFolder('CameraControl');
+    cameraControlFolder.add(menu, 'active', cameraControl.active);
+    cameraControlFolder.add(menu, 'firstPerson', cameraControl.firstPerson);
+    cameraControlFolder.add(menu, 'pivoting', cameraControl.pivoting);
+    cameraControlFolder.add(menu, 'panToPointer', cameraControl.panToPointer);
+    cameraControlFolder.add(menu, 'panToPivot', cameraControl.panToPivot);
+    cameraControlFolder.add(menu, 'doublePickFlyTo', cameraControl.doublePickFlyTo);
+    cameraControlFolder.add(menu, 'inertia', 0.0, 1.0);
+    cameraControlFolder.open();
+
+
+    var cameraFolder = gui.addFolder('Camera');
+    cameraFolder.add(menu, 'gimbalLock', camera.gimbalLock);
+    cameraFolder.add(menu, 'projection', ["perspective", "frustum", "ortho", "customProjection"]);
+    cameraFolder.open();
+
+</script>
+</html>
