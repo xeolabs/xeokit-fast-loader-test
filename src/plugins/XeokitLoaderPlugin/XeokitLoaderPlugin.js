@@ -77,10 +77,14 @@ class XeokitLoaderPlugin extends Plugin {
         const modelId = performanceModel.id;  // In case ID was auto-generated
 
         if (params.src) {
+            const spinner = this.viewer.scene.canvas.spinner;
+            spinner.processes++;
             utils.loadArraybuffer(params.src, (arrayBuffer) => {
                     this._parse(performanceModel, arrayBuffer, () => {
+                        spinner.processes--;
                         performanceModel.fire("loaded", true);
                     }, (errMsg) => {
+                        spinner.processes--;
                         this.error(errMsg);
                     });
                 },
