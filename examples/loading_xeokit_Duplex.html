@@ -19,15 +19,11 @@
 <body>
 <canvas id="myCanvas"></canvas>
 <div id="info">
-    <h1>Loading a glTF Model</h1>
+    <h1>Loading a model from native xeokit binary format</h1>
     <ul>
+
         <li>
-            <a target="_other"
-               href="./../docs/class/src/plugins/XeokitLoaderPlugin/XeokitLoaderPlugin.js~XeokitLoaderPlugin.html">XeokitLoaderPlugin</a>
-            - Loads xeokit model from the file system
-        </li>
-        <li>
-            <a target="_other" href="https://github.com/xeokit/xeokit-sdk/wiki/Importing-Models">User Guide</a>
+            <div id="time"></div>
         </li>
     </ul>
 </div>
@@ -60,11 +56,18 @@
 
     const xeokitLoader = new XeokitLoaderPlugin(viewer);
 
+    var t0 = performance.now();
+
     const model = xeokitLoader.load({
         id: "myModel",
         src: "./models/xeokit/duplex.xeokit",
         metaModelSrc: "./metaModels/duplex/metaModel.json",
         edges: true
+    });
+
+    model.on("loaded", () => {
+        var t1 = performance.now();
+        document.getElementById("time").innerHTML = "Loaded in " + Math.floor(t1 - t0) + " milliseconds.";
     });
 
 </script>
