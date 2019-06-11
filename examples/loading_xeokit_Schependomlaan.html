@@ -54,8 +54,6 @@
     viewer.camera.look = [13.44, 3.31, -14.83];
     viewer.camera.up = [0.10, 0.98, -0.14];
 
-    viewer.scene.selectedMaterial.fillAlpha = 0.1;
-
     //----------------------------------------------------------------------------------------------------------------------
     // Create a xeokit loader plugin, load a model, fit to view
     //----------------------------------------------------------------------------------------------------------------------
@@ -69,12 +67,5 @@
         edges: true
     });
 
-    model.on("loaded", () => {
-        viewer.cameraFlight.flyTo(model);
-    });
-
-    viewer.cameraControl.on("picked", function(e) {
-        console.log(e.entity.id);
-    })
 </script>
 </html>
