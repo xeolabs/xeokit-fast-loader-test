@@ -80,15 +80,12 @@ class XeokitLoaderPlugin extends Plugin {
             const spinner = this.viewer.scene.canvas.spinner;
             spinner.processes++;
             utils.loadArraybuffer(params.src, (arrayBuffer) => {
-                    this._parse(performanceModel, arrayBuffer, () => {
-                        spinner.processes--;
-                        performanceModel.fire("loaded", true);
-                    }, (errMsg) => {
-                        spinner.processes--;
-                        this.error(errMsg);
-                    });
+                    this._parse(performanceModel, arrayBuffer);
+                    spinner.processes--;
+                    performanceModel.fire("loaded", true);
                 },
                 (errMsg) => {
+                    spinner.processes--;
                     this.error(errMsg);
                 });
         }
@@ -105,9 +102,9 @@ class XeokitLoaderPlugin extends Plugin {
             delete params.id;
         }
 
-        const model =  new PerformanceModel(this.viewer.scene, utils.apply(params, {
-                isModel: true
-            }));
+        const model = new PerformanceModel(this.viewer.scene, utils.apply(params, {
+            isModel: true
+        }));
 
         const modelId = model.id;  // In case ID was auto-generated
 
@@ -250,21 +247,8 @@ class XeokitLoaderPlugin extends Plugin {
         return model;
     }
 
-    _parse(performanceModel, arrayBuffer, ok, error) {
-        this._parseBlob(arrayBuffer, performanceModel, function () {
-                performanceModel.scene.fire("modelLoaded", performanceModel.id); // FIXME: Assumes listeners know order of these two events
-                performanceModel.fire("loaded", true, true);
-                if (ok) {
-                    ok();
-                }
-            },
-            function (msg) {
-                performanceModel.error(msg);
-                performanceModel.fire("error", msg);
-                if (error) {
-                    error(msg);
-                }
-            });
+    _parse(performanceModel, arrayBuffer) {
+        this._parseBlob(arrayBuffer, performanceModel);
     }
 
     _parseBlob(arrayBuffer, performanceModel) {
