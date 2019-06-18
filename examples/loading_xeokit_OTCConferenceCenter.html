@@ -62,7 +62,8 @@
         id: "myModel",
         src: "./models/xeokit/OTCConferenceCenter.xeokit",
         metaModelSrc: "./metaModels/OTCConferenceCenter/metaModel.json", // Creates a MetaObject instances in scene.metaScene.metaObjects
-        edges: true
+        edges: true,
+        ghosted: true
     });
 
     model.on("loaded", () => {
